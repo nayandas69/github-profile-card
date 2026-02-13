@@ -28,7 +28,7 @@
         <text x="0" y="28" class="stat-label">Stars</text>
       </g>
       <g transform="translate(100,0)">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="#fe8019" role="img"><path fill-rule="evenodd" d="M10.5 7.75a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zm1.43.75a4.002 4.002 0 01-7.86 0H.75a.75.75 0 110-1.5h3.32a4.001 4.001 0 017.86 0h3.32a.75.75 0 110 1.5h-3.32z"/></svg><text x="20" y="12" class="stat">224</text>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="#fe8019" role="img"><path fill-rule="evenodd" d="M10.5 7.75a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zm1.43.75a4.002 4.002 0 01-7.86 0H.75a.75.75 0 110-1.5h3.32a4.001 4.001 0 017.86 0h3.32a.75.75 0 110 1.5h-3.32z"/></svg><text x="20" y="12" class="stat">228</text>
         <text x="0" y="28" class="stat-label">Commits</text>
       </g>
       <g transform="translate(220,0)">
