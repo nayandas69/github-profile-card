@@ -1,3 +1,4 @@
 # ignores shit
 node_modules/
 .env
+dist/
