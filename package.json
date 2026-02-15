@@ -1,6 +1,6 @@
 {
   "name": "github-profile-card",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Github Profile Card is a Node.js application that generates a visually appealing profile card for GitHub users. It fetches user data from the GitHub API and displays it in a card format, making it easy to share and showcase GitHub profiles.",
   "homepage": "https://github.com/nayandas69/github-profile-card",
   "license": "MIT",
