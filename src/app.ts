@@ -111,7 +111,13 @@ app.get('/card/:username', async (c) => {
     // Fetch profile data (with multi-layer caching)
     const data = await getProfileData(username, { includeLanguages });
 
-    // Render the SVG card with optional theme/color overrides
+    /**
+     * Render the SVG card with optional theme/color overrides.
+     * [Fix] Issue #3 Bug 3 - Pass the parsed `fields` set to renderCard()
+     * so it can conditionally show/hide the stats row and language section.
+     * Previously `fields` was parsed here but never forwarded, so the card
+     * always rendered every section regardless of what the user requested.
+     */
     const svg = renderCard(data.user, data.stats, data.languages, {
       theme: query['theme'],
       title_color: query['title_color'],
@@ -121,6 +127,7 @@ app.get('/card/:username', async (c) => {
       border_color: query['border_color'],
       hide_border: query['hide_border'] === 'true',
       compact: query['compact'] === 'true',
+      fields,
     });
 
     // Return SVG with aggressive caching headers
