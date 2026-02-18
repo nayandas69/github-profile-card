@@ -1,12 +1,13 @@
 /**
  * Tests for text formatting and number utilities.
- * Covers kFormat, escapeXml, and wrapText functions.
+ * Covers kFormat and escapeXml functions.
+ * (wrapText was removed -- bio uses single-line truncation in card.ts)
  *
  * @author Nayan Das <https://github.com/nayandas69>
  */
 
 import { describe, it, expect } from 'vitest';
-import { kFormat, escapeXml, wrapText } from '../src/utils/format';
+import { kFormat, escapeXml } from '../src/utils/format';
 
 /* -------------------------------------------------- */
 /*  kFormat - compact number formatting               */
@@ -57,31 +58,5 @@ describe('escapeXml', () => {
   });
 });
 
-/* -------------------------------------------------- */
-/*  wrapText - multi-line text wrapper                */
-/* -------------------------------------------------- */
-describe('wrapText', () => {
-  it('does not wrap short text', () => {
-    const result = wrapText('Hello', 20, 2);
-    expect(result).toEqual(['Hello']);
-  });
-
-  it('wraps long text into multiple lines', () => {
-    const result = wrapText('This is a longer text that should be wrapped', 20, 3);
-    expect(result.length).toBeGreaterThan(1);
-    // Each line should roughly respect the max width
-    for (const line of result) {
-      expect(line.length).toBeLessThanOrEqual(21);
-    }
-  });
-
-  it('respects max lines limit', () => {
-    const result = wrapText('word '.repeat(100), 10, 2);
-    expect(result.length).toBeLessThanOrEqual(2);
-  });
-
-  it('handles empty input gracefully', () => {
-    const result = wrapText('', 20, 2);
-    expect(result).toEqual([]);
-  });
-});
+// wrapText tests removed -- function was unused dead code.
+// Bio display uses single-line truncation at 40 chars (see card.ts).
