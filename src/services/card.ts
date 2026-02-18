@@ -251,7 +251,7 @@ export function renderCard(
       </g>
       <g transform="translate(100,0)">
         ${icon('commit', c.icon, 16)}<text x="20" y="12" class="stat">${kFormat(stats.commits)}</text>
-        <text x="0" y="${statLabelY}" class="stat-label">Commits (${stats.commitYear})</text>
+        <text x="0" y="${statLabelY}" class="stat-label">Commits (${stats.commitYear ?? new Date().getUTCFullYear()})</text>
       </g>
       <g transform="translate(220,0)">
         ${icon('issue', c.icon, 16)}<text x="20" y="12" class="stat">${kFormat(stats.issues)}</text>

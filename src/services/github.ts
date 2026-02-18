@@ -301,7 +301,15 @@ export async function getProfileData(
   if (redis) {
     try {
       const redisValue = await redis.get<ProfileData>(`profile:${cacheKey}`);
-      if (redisValue) {
+      /**
+       * Validate that cached data contains all required fields before using it.
+       * Stale entries from before the commitYear field was added (Bug 6) would
+       * have stats.commitYear === undefined, causing "Commits (undefined)" on
+       * the rendered card. If any required field is missing we skip the cached
+       * entry and fall through to the live API, which will also overwrite the
+       * stale Redis entry with fresh data.
+       */
+      if (redisValue && redisValue.stats?.commitYear != null) {
         setCache(cacheKey, redisValue);
         return redisValue;
       }
