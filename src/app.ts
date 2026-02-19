@@ -95,14 +95,25 @@ app.get('/card/:username', async (c) => {
     }
 
     // Parse optional fields filter
-    const fields = query['fields']
-      ? new Set(
-          query['fields']
-            .split(',')
-            .map((v) => v.trim().toLowerCase())
-            .filter(Boolean)
-        )
+    const VALID_FIELDS = new Set(['stats', 'languages', 'langs', 'all']);
+    const fieldsRaw = query['fields']
+      ? query['fields']
+          .split(',')
+          .map((v) => v.trim().toLowerCase())
+          .filter(Boolean)
       : null;
+    if (fieldsRaw) {
+      const invalid = fieldsRaw.filter((f) => !VALID_FIELDS.has(f));
+      if (invalid.length > 0) {
+        return c.json(
+          {
+            error: `Invalid fields value(s): ${invalid.join(', ')}. Valid values are: stats, languages, langs, all`,
+          },
+          400
+        );
+      }
+    }
+    const fields = fieldsRaw ? new Set(fieldsRaw) : null;
 
     // Determine if we need to fetch language data
     const includeLanguages =
