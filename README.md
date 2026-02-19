@@ -44,7 +44,7 @@ Visit: `https://github-profile-card-blue.vercel.app/card/{username}?theme={theme
 
 Replace `{username}` with any GitHub username and `{theme}` with one of our 56 available themes listed below.
 
-<details open>
+<details close>
 <summary><b>Complete Thematic Catalogue (56 Variations)</b></summary>
 
 ### Default Theme
