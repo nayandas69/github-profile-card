@@ -34,7 +34,7 @@ export function renderCard(
   const compact = opts.compact ?? false;
 
   /**
-   * [Fix] Issue #3 Bug 3 - Determine which sections to render based on
+   * Determine which sections to render based on
    * the `fields` query param. When `fields` is null (not provided) or
    * contains "all", every section is shown (backwards-compatible default).
    * Otherwise only the sections explicitly listed are rendered.
@@ -71,7 +71,7 @@ export function renderCard(
   const infoX = P + avatarSize + 16; // X offset for text next to avatar
 
   /**
-   * [Fix] Issue #3 Bug 4 - Dynamically calculate the card height based on
+   * Dynamically calculate the card height based on
    * which optional content sections are present (bio lines, pronouns,
    * twitter handle, stats row, language bar + labels).
    * Previously H was hardcoded to 200px which clipped content when users
@@ -136,7 +136,7 @@ export function renderCard(
     : '';
 
   /**
-   * [Fix] Issue #3 Bug 5 - Two-pass fit-all label layout.
+   * Two-pass fit-all label layout.
    *
    * Previously labels were evenly spaced by `barWidth / langs.length`, so
    * long names like "TypeScript 45%" would overlap the next label. The first
@@ -249,7 +249,7 @@ export function renderCard(
     <text x="${infoX}" y="${usernameY}" class="user">@${uname}${pronouns ? ` · ${pronouns}` : ''}</text>
     ${!compact && bioLine ? `<text x="${infoX}" y="${bioY}" class="bio">${bioLine}</text>` : ''}
     ${!compact && twitter ? `<g transform="translate(${infoX},${twitterY - 9})">${icon('x', c.icon, 11)}<text x="14" y="9" class="tw">@${twitter}</text></g>` : ''}
-    ${/* [Fix] Issue #3 Bug 3 - Only render the stats row when showStats is true */ ''}
+    ${/* Only render the stats row when showStats is true */ ''}
     ${
       showStats
         ? `<g transform="translate(${P},${headerY})">
@@ -276,7 +276,7 @@ export function renderCard(
     </g>`
         : ''
     }
-    ${/* [Fix] Issue #3 Bug 3 - Only render the language bar and labels when showLanguages is true */ ''}
+    ${/* Only render the language bar and labels when showLanguages is true */ ''}
     ${
       showLanguages
         ? `<text x="${P}" y="${barY - 8}" class="sec">Top Languages</text>

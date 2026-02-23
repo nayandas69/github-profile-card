@@ -8,7 +8,7 @@
 
 import type { LanguageStat, ProfileData } from '../types/index.js';
 /**
- * [Fix] Issue #3 Bug 2 - Import getLangColor so the comprehensive language
+ * Import getLangColor so the comprehensive language
  * color map in languages.ts is actually used instead of relying solely on
  * the color returned by the GitHub API (which can be null/undefined).
  * Previously getLangColor was dead code: defined but never called anywhere.
@@ -102,7 +102,7 @@ const CACHE_TTL_SECONDS = 30 * 60;
  * Maximum number of entries allowed in the in-memory cache.
  * When this limit is exceeded, the oldest entries (by insertion order)
  * are evicted to keep memory usage bounded.
- * [Fix] Issue #3 Bug 1 - Previously the cache had no size limit and could
+ * Previously the cache had no size limit and could
  * grow indefinitely when many unique usernames were queried.
  */
 const MAX_CACHE_SIZE = 500;
@@ -110,7 +110,7 @@ const MAX_CACHE_SIZE = 500;
 /**
  * Interval (in ms) for the periodic sweep that prunes expired entries.
  * Runs every 5 minutes so stale entries don't linger until the next read.
- * [Fix] Issue #3 Bug 1 - Previously expired entries were only cleaned on
+ * Previously expired entries were only cleaned on
  * read, meaning entries for usernames never requested again stayed forever.
  */
 const CACHE_SWEEP_INTERVAL_MS = 5 * 60 * 1000;
@@ -131,7 +131,6 @@ interface CacheEntry {
  * order) are removed first when MAX_CACHE_SIZE is exceeded. Writes
  * refresh an entry's position but reads do not, so this is not true
  * LRU. For a 500-entry cache with 30-minute TTL this is sufficient.
- * [Fix] Issue #3 Bug 1
  */
 const cache = new Map<string, CacheEntry>();
 
@@ -141,7 +140,7 @@ let inFlightCount = 0;
 /**
  * Evicts the oldest cache entries (by Map insertion order) until the
  * cache size is at or below MAX_CACHE_SIZE.
- * [Fix] Issue #3 Bug 1 - Ensures the cache never grows unbounded.
+ * Ensures the cache never grows unbounded.
  */
 function evictOldestEntries(): void {
   while (cache.size > MAX_CACHE_SIZE) {
@@ -156,7 +155,7 @@ function evictOldestEntries(): void {
  * Sweeps all expired entries from the in-memory cache.
  * Called periodically by a timer so stale entries are cleaned up
  * even if they are never read again.
- * [Fix] Issue #3 Bug 1 - Previously expired entries were only purged
+ * Previously expired entries were only purged
  * on read (inside getCache), leaving orphaned entries in memory.
  */
 function sweepExpiredEntries(): void {
@@ -172,7 +171,6 @@ function sweepExpiredEntries(): void {
  * Periodic sweep timer — runs every CACHE_SWEEP_INTERVAL_MS to prune
  * expired entries proactively. Uses unref() so the timer does not
  * prevent the Node.js process from exiting gracefully.
- * [Fix] Issue #3 Bug 1
  */
 const _sweepTimer = setInterval(sweepExpiredEntries, CACHE_SWEEP_INTERVAL_MS);
 if (typeof _sweepTimer === 'object' && 'unref' in _sweepTimer) {
@@ -262,7 +260,7 @@ function getCache(cacheKey: string): ProfileData | null {
 /**
  * Writes a value into the in-memory cache and evicts oldest entries
  * if the cache exceeds MAX_CACHE_SIZE.
- * [Fix] Issue #3 Bug 1 - Added eviction call to enforce bounded size.
+ * Added eviction call to enforce bounded size.
  */
 function setCache(cacheKey: string, value: ProfileData): void {
   // Delete first so re-insertion moves the key to the end (most recent)
@@ -414,7 +412,7 @@ export async function getProfileData(
                 current.size += edge.size;
               } else {
                 /**
-                 * [Fix] Issue #3 Bug 2 - Use getLangColor() from the local
+                 * Use getLangColor() from the local
                  * language color map as the primary source, with the GitHub
                  * API color as a secondary fallback. This ensures the
                  * comprehensive 600+ language color map in languages.ts is
@@ -469,7 +467,7 @@ export async function getProfileData(
           issues: (user.openIssues?.totalCount || 0) + (user.closedIssues?.totalCount || 0),
           commits: user.contributionsCollection?.totalCommitContributions || 0,
           /**
-           * [Fix] Issue #3 Bug 6 - Record the year so the card can display
+           * Record the year so the card can display
            * "Commits (2026)" instead of a bare "Commits" label.
            */
           commitYear: now.getUTCFullYear(),

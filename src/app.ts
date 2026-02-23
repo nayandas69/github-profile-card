@@ -124,7 +124,7 @@ app.get('/card/:username', async (c) => {
 
     /**
      * Render the SVG card with optional theme/color overrides.
-     * [Fix] Issue #3 Bug 3 - Pass the parsed `fields` set to renderCard()
+     * Pass the parsed `fields` set to renderCard()
      * so it can conditionally show/hide the stats row and language section.
      * Previously `fields` was parsed here but never forwarded, so the card
      * always rendered every section regardless of what the user requested.

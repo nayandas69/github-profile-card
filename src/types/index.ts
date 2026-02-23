@@ -26,7 +26,7 @@ export interface UserStats {
   issues: number;
   commits: number;
   /**
-   * [Fix] Issue #3 Bug 6 - The year the commit count belongs to.
+   * The year the commit count belongs to.
    * The GitHub contributionsCollection query is scoped to a single
    * calendar year, so the card must display which year the number
    * refers to (e.g. "Commits (2026)") to avoid confusion.
@@ -61,7 +61,7 @@ export interface CardOptions {
   hide_border?: boolean;
   compact?: boolean;
   /**
-   * [Fix] Issue #3 Bug 3 - Optional set of field names the user requested
+   * Optional set of field names the user requested
    * via the `?fields=` query param (e.g. "languages", "stats", "all").
    * When provided, renderCard() uses this to conditionally hide sections
    * the user did not ask for. Previously fields only controlled data
