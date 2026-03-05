@@ -2,48 +2,79 @@ version: 2
 
 updates:
   # Node / pnpm dependencies
-  - package-ecosystem: npm
+  - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: daily
+      interval: "monthly"
       time: "02:00"
-      timezone: UTC
+      timezone: "UTC"
+
     open-pull-requests-limit: 5
+
     reviewers:
-      - nayandas69
+      - "nayandas69"
+
+    assignees:
+      - "nayandas69"
+
     labels:
-      - dependencies
-      - auto-update
+      - "dependencies"
+      - "auto-update"
+
     commit-message:
-      prefix: "chore"
+      prefix: "chore(deps)"
       include: "scope"
+
     pull-request-branch-name:
       separator: "/"
-    versioning-strategy: auto
-    rebase-strategy: auto
+
+    versioning-strategy: "increase"
+    rebase-strategy: "auto"
+
     allow:
-      - dependency-type: production
-      - dependency-type: development
+      - dependency-type: "direct"
+
     groups:
-      minor-and-patch:
-        update-types:
-          - minor
-          - patch
+      hono:
+        patterns:
+          - "hono"
+          - "@hono/*"
+
+      upstash:
+        patterns:
+          - "@upstash/*"
+
+      tooling:
+        patterns:
+          - "typescript"
+          - "tsx"
+          - "vitest"
+          - "prettier"
+          - "@types/*"
 
   # GitHub Actions updates
-  - package-ecosystem: github-actions
+  - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: weekly
-      day: monday
-      time: "02:00"
-      timezone: UTC
-    open-pull-requests-limit: 5
+      interval: "monthly"
+      time: "03:00"
+      timezone: "UTC"
+
     reviewers:
-      - nayandas69
+      - "nayandas69"
+
+    assignees:
+      - "nayandas69"
+
     labels:
-      - ci
-      - github-actions
+      - "ci"
+      - "github-actions"
+
     commit-message:
-      prefix: "ci"
+      prefix: "chore(ci)"
       include: "scope"
+
+    pull-request-branch-name:
+      separator: "/"
+
+    rebase-strategy: "auto"
