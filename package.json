@@ -27,8 +27,8 @@
     "lint": "eslint src/ __tests__/",
     "lint:fix": "eslint src/ __tests__/ --fix",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\" \"api/**/*.ts\" \"vitest.config.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\" \"api/**/*.ts\" \"vitest.config.ts\""
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@hono/node-server": "^1.13.8",
