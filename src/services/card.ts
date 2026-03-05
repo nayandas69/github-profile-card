@@ -240,7 +240,7 @@ export function renderCard(
       ${compact ? '' : `.bio{font-size:11px;fill:#${c.text};opacity:.65}.tw{font-size:11px;fill:#${c.text};opacity:.7}.lang{font-size:10px;fill:#${c.text}}`}
       .stat{font-size:14px;font-weight:700;fill:#${c.text}}
       .stat-label{font-size:9px;font-weight:600;fill:#${c.text};opacity:.55;text-transform:uppercase;letter-spacing:.6px}
-      .sec{font-size:9px;font-weight:600;fill:#${c.text};opacity:.5;text-transform:uppercase;letter-spacing:.6px}
+      .sec{font-size:9px;font-weight:600;fill:#${c.text};opacity:.6;text-transform:uppercase;letter-spacing:.7px}
     </style>
     <rect class="bg" width="${W}" height="${H}" rx="10" stroke="${hideBorder ? 'none' : `#${c.border}`}" stroke-width="1"/>
     <circle cx="${P + avatarSize / 2}" cy="${P + avatarSize / 2}" r="${avatarSize / 2 + 2}" fill="none" stroke="#${c.border}" stroke-width="1" opacity=".6"/>
@@ -279,7 +279,7 @@ export function renderCard(
     ${/* Only render the language bar and labels when showLanguages is true */ ''}
     ${
       showLanguages
-        ? `<text x="${P}" y="${barY - 8}" class="sec">Top Languages</text>
+        ? `<text x="${P}" y="${barY - 12}" class="sec">Top Languages</text>
     <rect x="${P}" y="${barY}" width="${barWidth}" height="8" rx="4" fill="#${c.text}" opacity=".1"/>
     <g clip-path="url(#b)">${langRects}</g>
     ${langLabels}`
