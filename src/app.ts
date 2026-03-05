@@ -49,7 +49,7 @@ function isValidHexColor(color: string): boolean {
 app.get('/', (c) => {
   return c.json({
     name: 'GitHub Profile Card API',
-    version: '0.1.2',
+    version: '0.1.3',
     author: 'Nayan Das (https://github.com/nayandas69)',
     usage: 'GET /card/:username',
     themes: Object.keys(themes),
@@ -177,7 +177,10 @@ app.get('/card/:username', async (c) => {
       return c.json({ error: message }, 500);
     }
 
-    return c.json({ error: 'An unexpected error occurred' }, 500);
+    // Handle non-Error objects
+    const errorMessage =
+      err instanceof Object && 'message' in err ? String(err.message) : String(err);
+    return c.json({ error: errorMessage || 'An unexpected error occurred' }, 500);
   }
 });
 
