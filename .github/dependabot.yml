@@ -1,0 +1,55 @@
+# .github/dependabot.yml
+version: 2
+
+updates:
+  # Node / pnpm dependencies
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: daily                # check daily
+      time: "02:00"
+      timezone: UTC
+    open-pull-requests-limit: 5
+    reviewers:
+      - nayandas69
+    labels:
+      - dependencies
+      - auto-update
+    commit-message:
+      prefix: "chore"
+      prefix-scope: "deps"
+      include: "scope"
+    pull-request-branch-name:
+      separator: "/"
+    versioning-strategy: semver
+    rebase-strategy: auto
+    allow:
+      - dependency-type: production
+      - dependency-type: development
+    # Group minor and patch updates together to reduce PR spam
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    # Security updates are always prioritized
+    ignore: []                        # do not ignore any production/security updates
+
+  # GitHub Actions updates
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "02:00"
+      timezone: UTC
+    open-pull-requests-limit: 5
+    reviewers:
+      - nayandas69
+    labels:
+      - ci
+      - github-actions
+    commit-message:
+      prefix: "ci"
+      prefix-scope: "actions"
+      include: "scope"
