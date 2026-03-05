@@ -737,6 +737,7 @@ Replace `{username}` with any GitHub username and `{theme}` with one of our 56 a
    GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    UPSTASH_REDIS_REST_URL=https://xxxxxxxx.upstash.io
    UPSTASH_REDIS_REST_TOKEN=AxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxE=
+   MAX_IN_FLIGHT_REQUESTS=100
    PORT=3000
    ```
 
@@ -820,11 +821,7 @@ check the `.env.example` file for a detailed template of required environment va
   "author": "Nayan Das (https://github.com/nayandas69)",
   "usage": "GET /card/:username",
   "themes": [
-    "default", "dark", "radical", "merko", "gruvbox",
-    "tokyonight", "onedark", "cobalt", "synthwave",
-    "highcontrast", "dracula", "monokai", "nord",
-    "github_dark", "pearl", "slate", "forest", "rose", "sand"
-  ],
+    "default", "dark", "radical", ...],
   "repository": "https://github.com/nayandas69/github-profile-card"
 }
 ```
