@@ -29,6 +29,45 @@ function getHeaders(): Record<string, string> {
   };
 }
 
+/**
+ * Retry logic for GitHub API requests with exponential backoff.
+ * Handles 429 (rate limit) errors with automatic retry.
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries: number = 3
+): Promise<Response> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const res = await fetch(url, options);
+
+      // If rate limited, wait and retry (except on last attempt)
+      if (res.status === 429 && attempt < maxRetries - 1) {
+        const retryAfter = res.headers.get('Retry-After');
+        const delayMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : 1000 * Math.pow(2, attempt);
+        console.warn(
+          `Rate limited. Retrying in ${delayMs}ms (attempt ${attempt + 1}/${maxRetries})`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        continue;
+      }
+
+      return res;
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (attempt < maxRetries - 1) {
+        const delayMs = 1000 * Math.pow(2, attempt);
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+
+  throw lastError || new Error('Failed after retries');
+}
+
 /* ---------- GraphQL Queries ---------- */
 
 /**
@@ -115,8 +154,8 @@ const MAX_CACHE_SIZE = 500;
  */
 const CACHE_SWEEP_INTERVAL_MS = 5 * 60 * 1000;
 
-/** Maximum number of in-flight requests to prevent memory bloat */
-const MAX_IN_FLIGHT_REQUESTS = 100;
+/** Maximum number of in-flight requests to prevent memory bloat (configurable via env) */
+const MAX_IN_FLIGHT_REQUESTS = parseInt(process.env['MAX_IN_FLIGHT_REQUESTS'] ?? '100', 10);
 
 /** In-memory cache entry with expiry and optional in-flight promise */
 interface CacheEntry {
@@ -172,10 +211,8 @@ function sweepExpiredEntries(): void {
  * expired entries proactively. Uses unref() so the timer does not
  * prevent the Node.js process from exiting gracefully.
  */
-const _sweepTimer = setInterval(sweepExpiredEntries, CACHE_SWEEP_INTERVAL_MS);
-if (typeof _sweepTimer === 'object' && 'unref' in _sweepTimer) {
-  _sweepTimer.unref();
-}
+const _sweepTimer: NodeJS.Timer = setInterval(sweepExpiredEntries, CACHE_SWEEP_INTERVAL_MS);
+_sweepTimer.unref();
 
 /** Options for controlling what data to fetch */
 interface FetchOptions {
@@ -217,8 +254,9 @@ async function getRedis(): Promise<import('@upstash/redis').Redis | null> {
  * Downloads a GitHub avatar and converts it to a base64 data URL.
  * This allows the avatar to be embedded directly in the SVG
  * so the card works in contexts that don't support external images.
+ * Falls back to a placeholder SVG data URL if fetch fails.
  */
-async function fetchAvatarDataUrl(url: string): Promise<string | null> {
+async function fetchAvatarDataUrl(url: string): Promise<string> {
   try {
     // Request a smaller 96px version for better performance
     const sizedUrl = `${url}${url.includes('?') ? '&' : '?'}s=96`;
@@ -229,7 +267,7 @@ async function fetchAvatarDataUrl(url: string): Promise<string | null> {
 
     if (!res.ok) {
       console.warn(`Avatar fetch failed: ${res.status} for ${url}`);
-      return null;
+      return getPlaceholderAvatar();
     }
 
     const contentType = res.headers.get('content-type') || 'image/png';
@@ -238,8 +276,18 @@ async function fetchAvatarDataUrl(url: string): Promise<string | null> {
     return `data:${contentType};base64,${base64}`;
   } catch (err) {
     console.warn('Avatar fetch error:', err instanceof Error ? err.message : err);
-    return null;
+    return getPlaceholderAvatar();
   }
+}
+
+/**
+ * Returns a placeholder SVG avatar as a data URL.
+ * Used when avatar fetch fails to ensure a graceful fallback.
+ */
+function getPlaceholderAvatar(): string {
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96"><rect width="96" height="96" fill="#e0e0e0"/><circle cx="48" cy="32" r="16" fill="#999"/><path d="M 24 72 Q 24 56 48 56 Q 72 56 72 72" fill="#999"/></svg>';
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 }
 
 /* ---------- Cache Helpers ---------- */
@@ -357,7 +405,7 @@ export async function getProfileData(
       while (hasNextPage && pageCount < maxPages) {
         pageCount++;
 
-        const res = await fetch('https://api.github.com/graphql', {
+        const res = await fetchWithRetry('https://api.github.com/graphql', {
           method: 'POST',
           headers: getHeaders(),
           body: JSON.stringify({
