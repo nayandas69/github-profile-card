@@ -37,7 +37,7 @@ function isValidGitHubUsername(username: string): boolean {
 
 /** Validates hex color format (with or without #) */
 function isValidHexColor(color: string): boolean {
-  return /^#?[0-9a-fA-F]{6}$/.test(color);
+  return /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color);
 }
 
 /* --- Routes --- */

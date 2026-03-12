@@ -211,7 +211,7 @@ function sweepExpiredEntries(): void {
  * expired entries proactively. Uses unref() so the timer does not
  * prevent the Node.js process from exiting gracefully.
  */
-const _sweepTimer: NodeJS.Timer = setInterval(sweepExpiredEntries, CACHE_SWEEP_INTERVAL_MS);
+const _sweepTimer: NodeJS.Timeout = setInterval(sweepExpiredEntries, CACHE_SWEEP_INTERVAL_MS);
 _sweepTimer.unref();
 
 /** Options for controlling what data to fetch */
