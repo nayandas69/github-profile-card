@@ -9,9 +9,6 @@
     /* Paths */
     "rootDir": ".",
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    },
 
     /* Emit */
     "noEmit": false,

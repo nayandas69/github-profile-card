@@ -15,7 +15,9 @@ import http from 'http';
 import app from './app.js';
 
 /** Base port to listen on (defaults to 3000) */
-const basePort = Number(process.env['PORT'] || 3000);
+const rawPort = process.env['PORT'];
+const parsedPort = rawPort !== undefined ? Number(rawPort) : 3000;
+const basePort = Number.isFinite(parsedPort) && parsedPort > 0 ? parsedPort : 3000;
 
 /** Graceful shutdown handler */
 function handleShutdown() {
@@ -28,24 +30,22 @@ function handleShutdown() {
  * if the base port is already in use.
  */
 function findAvailablePort(port: number): Promise<number> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const server = http.createServer();
 
     server.once('error', (err: NodeJS.ErrnoException) => {
       if (err.code === 'EADDRINUSE') {
-        // Port is in use, try the next one
-        resolve(findAvailablePort(port + 1));
+        void findAvailablePort(port + 1).then(resolve, reject);
       } else {
-        throw err;
+        reject(err);
       }
     });
 
     server.once('listening', () => {
-      server.close();
-      resolve(port);
+      server.close(() => resolve(port));
     });
 
-    server.listen(port, '::');
+    server.listen(port);
   });
 }
 

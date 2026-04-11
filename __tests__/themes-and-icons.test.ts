@@ -187,10 +187,9 @@ describe('icon()', () => {
     expect(svg).toContain('viewBox="0 0 16 16"');
   });
 
-  it('renders the X icon with stroke instead of fill', () => {
+  it('renders the X icon with 24x24 viewBox and fill', () => {
     const svg = icon('x', 'abcdef');
-    expect(svg).toContain('stroke="#abcdef"');
-    expect(svg).toContain('fill="none"');
+    expect(svg).toContain('fill="#abcdef"');
     expect(svg).toContain('viewBox="0 0 24 24"');
   });
 

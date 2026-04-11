@@ -15,6 +15,14 @@ import type { LanguageStat, ProfileData } from '../types/index.js';
  */
 import { getLangColor } from '../utils/languages.js';
 
+/** Parses a positive integer from env; falls back if missing or invalid. Optional hard max for safety. */
+function parsePositiveIntEnv(raw: string | undefined, fallback: number, maxCap?: number): number {
+  const n = parseInt(raw ?? '', 10);
+  if (!Number.isFinite(n) || n < 1) return fallback;
+  const capped = maxCap !== undefined ? Math.min(n, maxCap) : n;
+  return capped;
+}
+
 /* ---------- Auth ---------- */
 
 /** Builds authorization headers for the GitHub GraphQL API */
@@ -23,7 +31,7 @@ function getHeaders(): Record<string, string> {
   if (!token) throw new Error('GITHUB_TOKEN is missing. Set it in your .env file.');
 
   return {
-    Authorization: `bearer ${token}`,
+    Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
     'User-Agent': 'github-profile-card',
   };
@@ -47,7 +55,14 @@ async function fetchWithRetry(
       // If rate limited, wait and retry (except on last attempt)
       if (res.status === 429 && attempt < maxRetries - 1) {
         const retryAfter = res.headers.get('Retry-After');
-        const delayMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : 1000 * Math.pow(2, attempt);
+        const backoffMs = 1000 * Math.pow(2, attempt);
+        let delayMs = backoffMs;
+        if (retryAfter) {
+          const seconds = parseInt(retryAfter, 10);
+          if (Number.isFinite(seconds) && seconds >= 0) {
+            delayMs = Math.min(Math.max(seconds, 1) * 1000, 60_000);
+          }
+        }
         console.warn(
           `Rate limited. Retrying in ${delayMs}ms (attempt ${attempt + 1}/${maxRetries})`
         );
@@ -155,7 +170,16 @@ const MAX_CACHE_SIZE = 500;
 const CACHE_SWEEP_INTERVAL_MS = 5 * 60 * 1000;
 
 /** Maximum number of in-flight requests to prevent memory bloat (configurable via env) */
-const MAX_IN_FLIGHT_REQUESTS = parseInt(process.env['MAX_IN_FLIGHT_REQUESTS'] ?? '100', 10);
+const MAX_IN_FLIGHT_REQUESTS = parsePositiveIntEnv(
+  process.env['MAX_IN_FLIGHT_REQUESTS'],
+  100,
+  10_000
+);
+
+/**
+ * Max GraphQL repository pages (100 repos each). Configurable via MAX_GITHUB_REPO_PAGES; capped at 50.
+ */
+const MAX_GITHUB_REPO_PAGES = parsePositiveIntEnv(process.env['MAX_GITHUB_REPO_PAGES'], 10, 50);
 
 /** In-memory cache entry with expiry and optional in-flight promise */
 interface CacheEntry {
@@ -399,10 +423,8 @@ export async function getProfileData(
       let totalStars = 0;
       const langMap = includeLanguages ? new Map<string, { size: number; color: string }>() : null;
       let pageCount = 0;
-      const maxPages = 10; // Prevent runaway pagination
-
-      // Paginate through all repositories to get complete data
-      while (hasNextPage && pageCount < maxPages) {
+      // Paginate through repositories (bounded; see MAX_GITHUB_REPO_PAGES)
+      while (hasNextPage && pageCount < MAX_GITHUB_REPO_PAGES) {
         pageCount++;
 
         const res = await fetchWithRetry('https://api.github.com/graphql', {

@@ -42,7 +42,11 @@ jobs:
       - name: Type check
         run: pnpm typecheck
 
-      # 6. Run tests
+      # 6. Lint
+      - name: Lint
+        run: pnpm lint
+
+      # 7. Run tests
       - name: Run tests
         run: pnpm test
         env:

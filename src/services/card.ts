@@ -45,6 +45,8 @@ export function renderCard(
   const showAll = !fields || fields.has('all');
   const showStats = showAll || fields.has('stats');
   const showLanguages = showAll || fields.has('languages') || fields.has('langs');
+  /** Render language bar/heading only when there is data (avoids empty "Top Languages"). */
+  const showLanguageBlock = showLanguages && langs.length > 0;
 
   /* --- Escape user-provided text for safe SVG embedding --- */
   const name = escapeXml(user.name || user.login);
@@ -100,15 +102,14 @@ export function renderCard(
   }
 
   // Gap between stats and language section
-  if (showStats && showLanguages) {
+  if (showStats && showLanguageBlock) {
     cursorY += 12;
   }
 
   // Language section: heading (18) + bar (8) + gap between bar and labels (8)
-  if (showLanguages) {
+  if (showLanguageBlock) {
     cursorY += 18 + 8;
-    // Language labels (only in non-compact mode with languages present)
-    if (!compact && langs.length > 0) {
+    if (!compact) {
       cursorY += 20; // labels row
     }
   }
@@ -118,13 +119,13 @@ export function renderCard(
 
   const H = Math.max(cursorY, compact ? 120 : 160); // Minimum height for visual balance
 
-  const barY = showLanguages ? H - (!compact && langs.length > 0 ? 40 : 24) : 0;
-  const labelY = showLanguages ? H - 16 : 0;
+  const barY = showLanguageBlock ? H - (!compact ? 40 : 24) : 0;
+  const labelY = showLanguageBlock ? H - 16 : 0;
 
   /* --- Language bar segments (proportional widths) --- */
   const totalSize = langs.reduce((sum, l) => sum + l.size, 0) || 1;
   let offset = 0;
-  const langRects = showLanguages
+  const langRects = showLanguageBlock
     ? langs
         .map((lang) => {
           const w = (lang.size / totalSize) * barWidth;
@@ -184,7 +185,7 @@ export function renderCard(
   }
 
   let langLabels = '';
-  if (showLanguages && !compact && langs.length > 0) {
+  if (showLanguageBlock && !compact) {
     // Find the longest language name to use as the starting point
     const longestName = Math.max(...langs.map((l) => l.name.length));
 
@@ -230,7 +231,7 @@ export function renderCard(
     <title>${name}'s GitHub Stats</title>
     <defs>
       <clipPath id="a"><circle cx="${P + avatarSize / 2}" cy="${P + avatarSize / 2}" r="${avatarSize / 2}"/></clipPath>
-      ${showLanguages ? `<clipPath id="b"><rect x="${P}" y="${barY}" width="${barWidth}" height="8" rx="4"/></clipPath>` : ''}
+      ${showLanguageBlock ? `<clipPath id="b"><rect x="${P}" y="${barY}" width="${barWidth}" height="8" rx="4"/></clipPath>` : ''}
     </defs>
     <style>
       *{font-family:${fontFamily},sans-serif}
@@ -276,9 +277,9 @@ export function renderCard(
     </g>`
         : ''
     }
-    ${/* Only render the language bar and labels when showLanguages is true */ ''}
+    ${/* Only render the language bar and labels when there is language data */ ''}
     ${
-      showLanguages
+      showLanguageBlock
         ? `<text x="${P}" y="${barY - 12}" class="sec">Top Languages</text>
     <rect x="${P}" y="${barY}" width="${barWidth}" height="8" rx="4" fill="#${c.text}" opacity=".1"/>
     <g clip-path="url(#b)">${langRects}</g>
