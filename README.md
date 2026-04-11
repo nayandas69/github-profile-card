@@ -8,7 +8,7 @@
 
 [![CI](https://github.com/nayandas69/github-profile-card/actions/workflows/ci.yml/badge.svg)](https://github.com/nayandas69/github-profile-card/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
-[![Node.js Version](https://img.shields.io/badge/Node.js-24.x-339933?style=flat-square&logo=node.js)](package.json)
+[![Node.js Version](https://img.shields.io/badge/Node.js-%3E%3D20.6-339933?style=flat-square&logo=node.js)](package.json)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?style=flat-square&logo=typescript)](tsconfig.json)
 [![Hono Framework](https://img.shields.io/badge/Hono-4.7-FF6B35?style=flat-square&logo=fastapi)](package.json)
 [![Production Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?style=flat-square&logo=vercel)](https://github-profile-card-blue.vercel.app)

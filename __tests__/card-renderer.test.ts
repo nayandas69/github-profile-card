@@ -130,9 +130,10 @@ describe('renderCard', () => {
     expect(svg).toContain('testuser');
   });
 
-  it('renders correctly with empty languages array', () => {
+  it('omits the language section when there are no languages', () => {
     const svg = renderCard(mockUser, mockStats, []);
     expect(svg).toContain('<svg');
     expect(svg).toContain('</svg>');
+    expect(svg).not.toContain('Top Languages');
   });
 });

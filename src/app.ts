@@ -11,6 +11,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { getProfileData, renderCard } from './services/index.js';
 import { themes } from './utils/themes.js';
+import { APP_VERSION } from './version.js';
 
 /** Create the Hono app instance */
 const app = new Hono();
@@ -49,7 +50,7 @@ function isValidHexColor(color: string): boolean {
 app.get('/', (c) => {
   return c.json({
     name: 'GitHub Profile Card API',
-    version: '0.1.3',
+    version: APP_VERSION,
     author: 'Nayan Das (https://github.com/nayandas69)',
     usage: 'GET /card/:username',
     themes: Object.keys(themes),
