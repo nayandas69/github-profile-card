@@ -25,7 +25,7 @@ jobs:
 
       # 2. Install pnpm (version taken from package.json)
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
 
       # 3. Setup Node.js with pnpm caching
       - name: Setup Node.js ${{ matrix.node-version }}
