@@ -99,6 +99,11 @@ describe('renderCard', () => {
     expect(svg).not.toContain('forty character limit');
   });
 
+  it('renders the X handle above the bio', () => {
+    const svg = renderCard(mockUser, mockStats, mockLangs);
+    expect(svg.indexOf('class="tw"')).toBeLessThan(svg.indexOf('class="bio"'));
+  });
+
   it('hides bio in compact mode', () => {
     const svg = renderCard(mockUser, mockStats, mockLangs, { compact: true });
     expect(svg).not.toContain('Open source developer');
