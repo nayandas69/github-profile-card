@@ -1,6 +1,9 @@
-# CI Pipeline - Sequential Node versions: 20 → 22 → 24
-# Each version runs one after another (Node 20 first, then 22, then 24),
-# regardless of the previous result. All three must pass for CI to be green.
+# CI Pipeline - Sequential Node versions: 20 → 22 → 24 + final summary
+# All three versions run one after another regardless of the previous result.
+# A final "CI Summary" job reports the outcome:
+#   - all 3 passed  -> "All passed" (green)
+#   - none passed   -> "All failed/skipped/cancelled" (red)
+#   - some passed   -> "N passed, M failed/cancelled/skipped" (red)
 #
 # Author: Nayan Das (https://github.com/nayandas69)
 
@@ -16,6 +19,9 @@ jobs:
   test-node-20:
     name: Test (Node 20)
     runs-on: ubuntu-latest
+    continue-on-error: true
+    outputs:
+      passed: ${{ steps.check.outcome == 'success' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -39,6 +45,7 @@ jobs:
         run: pnpm lint
 
       - name: Run tests
+        id: check
         run: pnpm test
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -46,7 +53,11 @@ jobs:
   test-node-22:
     name: Test (Node 22)
     needs: test-node-20
+    if: always()
     runs-on: ubuntu-latest
+    continue-on-error: true
+    outputs:
+      passed: ${{ steps.check.outcome == 'success' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -70,6 +81,7 @@ jobs:
         run: pnpm lint
 
       - name: Run tests
+        id: check
         run: pnpm test
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -77,7 +89,11 @@ jobs:
   test-node-24:
     name: Test (Node 24)
     needs: test-node-22
+    if: always()
     runs-on: ubuntu-latest
+    continue-on-error: true
+    outputs:
+      passed: ${{ steps.check.outcome == 'success' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -101,6 +117,39 @@ jobs:
         run: pnpm lint
 
       - name: Run tests
+        id: check
         run: pnpm test
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  ci-summary:
+    name: CI Summary
+    needs: [test-node-20, test-node-22, test-node-24]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report results across all Node versions
+        run: |
+          PASS=0
+          for r in \
+            "${{ needs.test-node-20.outputs.passed }}" \
+            "${{ needs.test-node-22.outputs.passed }}" \
+            "${{ needs.test-node-24.outputs.passed }}"; do
+            [ "$r" = "true" ] && PASS=$((PASS+1))
+          done
+          FAIL=$((3 - PASS))
+
+          case "$PASS" in
+            3)
+              echo "✅ All passed - Node 20, 22, 24 (3/3)"
+              exit 0
+              ;;
+            0)
+              echo "❌ All failed - no Node version passed (0/3 failed/skipped/cancelled)"
+              exit 1
+              ;;
+            *)
+              echo "⚠️ $PASS passed, $FAIL failed/cancelled/skipped"
+              exit 1
+              ;;
+          esac
