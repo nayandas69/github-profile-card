@@ -247,7 +247,7 @@ export function renderCard(
     <circle cx="${P + avatarSize / 2}" cy="${P + avatarSize / 2}" r="${avatarSize / 2 + 2}" fill="none" stroke="#${c.border}" stroke-width="1" opacity=".6"/>
     <image href="${avatar}" x="${P}" y="${P}" width="${avatarSize}" height="${avatarSize}" clip-path="url(#a)"/>
     <text x="${infoX}" y="${nameY}" class="title">${name}</text>
-    <text x="${infoX}" y="${usernameY}" class="user">@${uname}${pronouns ? ` · ${pronouns}` : ''}</text>
+    <g transform="translate(${infoX},${usernameY - 9})">${icon('github', c.icon, 11)}<text x="14" y="9" class="user">@${uname}${pronouns ? ` · ${pronouns}` : ''}</text></g>
     ${!compact && bioLine ? `<text x="${infoX}" y="${bioY}" class="bio">${bioLine}</text>` : ''}
     ${!compact && twitter ? `<g transform="translate(${infoX},${twitterY - 9})">${icon('x', c.icon, 11)}<text x="14" y="9" class="tw">@${twitter}</text></g>` : ''}
     ${/* Only render the stats row when showStats is true */ ''}
