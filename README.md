@@ -18,6 +18,19 @@
 
 **GitHub Profile Card** is a sophisticated Node.js application engineered to generate aesthetically refined, configurable SVG profile cards for GitHub users. This utility proves particularly valuable for developers seeking to embed professional profile representations within README documentation, personal portfolios, landing pages, or web applications that require comprehensive GitHub profile visualisation.
 
+> [!IMPORTANT]
+> Repository metrics include **all public repositories owned by the user**, including public fork repositories. The repository total includes public originals and forks, and the star total includes stars from both. Issues and pull requests are shown as **lifetime totals**. Commits are shown for the **current calendar year** only and are based on the user&apos;s public GitHub contributions.
+
+### Metric Definitions
+
+| Metric | Scope |
+|---|---|
+| Repositories | All public repositories owned by the user, including public forks |
+| Stars | Lifetime stars across all public repositories and public forks |
+| Issues | Lifetime issues opened by the user |
+| Pull requests | Lifetime pull requests opened by the user |
+| Commits | Public commits contributed during the current calendar year |
+
 ### Configurable Parameters
 
 | Parameter | Data Type | Functional Description | Exemplification |

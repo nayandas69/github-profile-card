@@ -30,7 +30,7 @@ function mockGitHubResponse(overrides: Record<string, unknown> = {}) {
         closedIssues: { totalCount: 7 },
         contributionsCollection: { totalCommitContributions: 500 },
         repositories: {
-          totalCount: 8,
+          totalCount: 9,
           pageInfo: { hasNextPage: false, endCursor: null },
           nodes: [
             {
@@ -58,6 +58,11 @@ function mockGitHubResponse(overrides: Record<string, unknown> = {}) {
                   },
                 ],
               },
+            },
+            {
+              // This node represents a fork repository returned by GitHub.
+              stargazers: { totalCount: 25 },
+              languages: { edges: [] },
             },
           ],
         },
@@ -104,13 +109,15 @@ describe('getProfileData', () => {
     // Mock fetch: first call = GraphQL, second call = avatar download
     const mockResponse = mockGitHubResponse();
     let callCount = 0;
+    let graphQLQuery = '';
 
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockImplementation(() => {
+      vi.fn().mockImplementation((_: string, options?: RequestInit) => {
         callCount++;
         if (callCount === 1) {
           // GraphQL API response
+          graphQLQuery = (JSON.parse(String(options?.body)) as { query?: string }).query ?? '';
           return Promise.resolve({
             ok: true,
             json: () => Promise.resolve(mockResponse),
@@ -128,14 +135,17 @@ describe('getProfileData', () => {
     const { getProfileData } = await import('../src/services/github');
     const data = await getProfileData('octocat');
 
+    expect(graphQLQuery).toContain('privacy: PUBLIC');
+    expect(graphQLQuery).toContain('ownerAffiliations: OWNER');
+
     // Verify user profile shape
     expect(data.user.login).toBe('octocat');
     expect(data.user.name).toBe('The Octocat');
     expect(data.user.bio).toBe('GitHub mascot');
 
-    // Verify aggregated stats: 100 + 50 = 150 stars
-    expect(data.stats.stars).toBe(150);
-    expect(data.stats.repos).toBe(8);
+    // Verify original and fork repositories are included: 100 + 50 + 25 = 175 stars
+    expect(data.stats.stars).toBe(175);
+    expect(data.stats.repos).toBe(9);
     // PRs: 5 + 10 + 20 = 35
     expect(data.stats.prs).toBe(35);
     // Issues: 3 + 7 = 10

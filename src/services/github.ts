@@ -103,10 +103,17 @@ query userInfo($login: String!, $cursor: String, $from: DateTime!, $to: DateTime
     mergedPRs: pullRequests(states: MERGED) { totalCount }
     openIssues: issues(states: OPEN) { totalCount }
     closedIssues: issues(states: CLOSED) { totalCount }
+    # Querying a user (rather than viewer) keeps this count limited to public contributions.
     contributionsCollection(from: $from, to: $to) {
       totalCommitContributions
     }
-    repositories(first: 100, ownerAffiliations: OWNER, isFork: false, orderBy: {direction: DESC, field: STARGAZERS}, after: $cursor) {
+    repositories(
+      first: 100
+      ownerAffiliations: OWNER
+      privacy: PUBLIC
+      orderBy: { direction: DESC, field: STARGAZERS }
+      after: $cursor
+    ) {
       totalCount
       pageInfo { hasNextPage endCursor }
       nodes {
@@ -134,10 +141,17 @@ query userInfo($login: String!, $cursor: String, $from: DateTime!, $to: DateTime
     mergedPRs: pullRequests(states: MERGED) { totalCount }
     openIssues: issues(states: OPEN) { totalCount }
     closedIssues: issues(states: CLOSED) { totalCount }
+    # Querying a user (rather than viewer) keeps this count limited to public contributions.
     contributionsCollection(from: $from, to: $to) {
       totalCommitContributions
     }
-    repositories(first: 100, ownerAffiliations: OWNER, isFork: false, orderBy: {direction: DESC, field: STARGAZERS}, after: $cursor) {
+    repositories(
+      first: 100
+      ownerAffiliations: OWNER
+      privacy: PUBLIC
+      orderBy: { direction: DESC, field: STARGAZERS }
+      after: $cursor
+    ) {
       totalCount
       pageInfo { hasNextPage endCursor }
       nodes {
@@ -175,11 +189,6 @@ const MAX_IN_FLIGHT_REQUESTS = parsePositiveIntEnv(
   100,
   10_000
 );
-
-/**
- * Max GraphQL repository pages (100 repos each). Configurable via MAX_GITHUB_REPO_PAGES; capped at 50.
- */
-const MAX_GITHUB_REPO_PAGES = parsePositiveIntEnv(process.env['MAX_GITHUB_REPO_PAGES'], 10, 50);
 
 /** In-memory cache entry with expiry and optional in-flight promise */
 interface CacheEntry {
@@ -351,7 +360,7 @@ function setCache(cacheKey: string, value: ProfileData): void {
  * Implements a 3-tier caching strategy:
  *   1. In-memory cache (fastest, per-instance)
  *   2. Upstash Redis (shared across instances, optional)
- *   3. Live GitHub GraphQL API (fallback, paginates all repos)
+ *   3. Live GitHub GraphQL API (fallback, paginates all public repos)
  *
  * Also deduplicates concurrent requests for the same user to prevent
  * hammering the GitHub API when multiple cards load simultaneously.
@@ -422,11 +431,8 @@ export async function getProfileData(
       let user: any = null;
       let totalStars = 0;
       const langMap = includeLanguages ? new Map<string, { size: number; color: string }>() : null;
-      let pageCount = 0;
-      // Paginate through repositories (bounded; see MAX_GITHUB_REPO_PAGES)
-      while (hasNextPage && pageCount < MAX_GITHUB_REPO_PAGES) {
-        pageCount++;
-
+      // Paginate through every public repository so stars and languages are complete.
+      while (hasNextPage) {
         const res = await fetchWithRetry('https://api.github.com/graphql', {
           method: 'POST',
           headers: getHeaders(),
