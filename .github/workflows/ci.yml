@@ -1,4 +1,7 @@
-# CI Pipeline - Runs type checking and tests on every push/PR
+# CI Pipeline - Sequential Node versions: 20 → 22 → 24
+# Each version runs one after another (Node 20 first, then 22, then 24),
+# regardless of the previous result. All three must pass for CI to be green.
+#
 # Author: Nayan Das (https://github.com/nayandas69)
 
 name: CI
@@ -10,43 +13,93 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    name: Type Check & Test
+  test-node-20:
+    name: Test (Node 20)
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [20, 22, 24]
-
     steps:
-      # 1. Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      # 2. Install pnpm (version taken from package.json)
       - name: Install pnpm
         uses: pnpm/action-setup@v6
 
-      # 3. Setup Node.js with pnpm caching
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js 20
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "pnpm"
+          node-version: 20
+          cache: pnpm
 
-      # 4. Install dependencies
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 5. Type check
       - name: Type check
         run: pnpm typecheck
 
-      # 6. Lint
       - name: Lint
         run: pnpm lint
 
-      # 7. Run tests
+      - name: Run tests
+        run: pnpm test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  test-node-22:
+    name: Test (Node 22)
+    needs: test-node-20
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Run tests
+        run: pnpm test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  test-node-24:
+    name: Test (Node 24)
+    needs: test-node-22
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
       - name: Run tests
         run: pnpm test
         env:
