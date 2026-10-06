@@ -830,7 +830,7 @@ check the `.env.example` file for a detailed template of required environment va
 ```json
 {
   "name": "GitHub Profile Card API",
-  "version": "0.1.0",
+  "version": "0.1.6",
   "author": "Nayan Das (https://github.com/nayandas69)",
   "usage": "GET /card/:username",
   "themes": [
@@ -848,7 +848,7 @@ Returns comprehensive API metadata and accessible thematic variations.
 ```json
 {
   "name": "GitHub Profile Card API",
-  "version": "0.1.0",
+  "version": "0.1.6",
   "themes": ["default", "dark", "radical", ...]
 }
 ```
