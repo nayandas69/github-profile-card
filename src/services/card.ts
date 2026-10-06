@@ -213,11 +213,13 @@ export function renderCard(
       .join('');
   }
 
-  /* --- Vertical positions for profile info --- */
+  /* --- Vertical positions for profile info ---
+   * Field order (top to bottom): name, GitHub username, X/Twitter handle, bio.
+   * When the X handle is absent, the bio moves up right under the username. */
   const nameY = P + 22;
   const usernameY = nameY + 18;
-  const bioY = usernameY + 14;
-  const twitterY = bioLine ? bioY + 16 : usernameY + 16;
+  const twitterY = usernameY + 16;
+  const bioY = twitter ? twitterY + 16 : usernameY + 16;
 
   /* --- Font stack --- */
   const fontFamily =
@@ -248,8 +250,8 @@ export function renderCard(
     <image href="${avatar}" x="${P}" y="${P}" width="${avatarSize}" height="${avatarSize}" clip-path="url(#a)"/>
     <text x="${infoX}" y="${nameY}" class="title">${name}</text>
     <g transform="translate(${infoX},${usernameY - 9})">${icon('github', c.icon, 11)}<text x="14" y="9" class="user">@${uname}${pronouns ? ` · ${pronouns}` : ''}</text></g>
-    ${!compact && bioLine ? `<text x="${infoX}" y="${bioY}" class="bio">${bioLine}</text>` : ''}
     ${!compact && twitter ? `<g transform="translate(${infoX},${twitterY - 9})">${icon('x', c.icon, 11)}<text x="14" y="9" class="tw">@${twitter}</text></g>` : ''}
+    ${!compact && bioLine ? `<text x="${infoX}" y="${bioY}" class="bio">${bioLine}</text>` : ''}
     ${/* Only render the stats row when showStats is true */ ''}
     ${
       showStats

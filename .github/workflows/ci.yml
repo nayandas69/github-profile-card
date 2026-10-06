@@ -1,4 +1,10 @@
-# CI Pipeline - Runs type checking and tests on every push/PR
+# CI Pipeline - Sequential Node versions: 20 → 22 → 24 + final summary
+# All three versions run one after another regardless of the previous result.
+# A final "CI Summary" job reports the outcome:
+#   - all 3 passed  -> "All passed" (green)
+#   - none passed   -> "All failed/skipped/cancelled" (red)
+#   - some passed   -> "N passed, M failed/cancelled/skipped" (red)
+#
 # Author: Nayan Das (https://github.com/nayandas69)
 
 name: CI
@@ -10,44 +16,140 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    name: Type Check & Test
+  test-node-20:
+    name: Test (Node 20)
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [20, 22, 24]
-
+    continue-on-error: true
+    outputs:
+      passed: ${{ steps.check.outcome == 'success' }}
     steps:
-      # 1. Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      # 2. Install pnpm (version taken from package.json)
       - name: Install pnpm
         uses: pnpm/action-setup@v6
 
-      # 3. Setup Node.js with pnpm caching
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js 20
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "pnpm"
+          node-version: 20
+          cache: pnpm
 
-      # 4. Install dependencies
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 5. Type check
       - name: Type check
         run: pnpm typecheck
 
-      # 6. Lint
       - name: Lint
         run: pnpm lint
 
-      # 7. Run tests
       - name: Run tests
+        id: check
         run: pnpm test
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  test-node-22:
+    name: Test (Node 22)
+    needs: test-node-20
+    if: always()
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    outputs:
+      passed: ${{ steps.check.outcome == 'success' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Run tests
+        id: check
+        run: pnpm test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  test-node-24:
+    name: Test (Node 24)
+    needs: test-node-22
+    if: always()
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    outputs:
+      passed: ${{ steps.check.outcome == 'success' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Run tests
+        id: check
+        run: pnpm test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  ci-summary:
+    name: CI Summary
+    needs: [test-node-20, test-node-22, test-node-24]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report results across all Node versions
+        run: |
+          PASS=0
+          for r in \
+            "${{ needs.test-node-20.outputs.passed }}" \
+            "${{ needs.test-node-22.outputs.passed }}" \
+            "${{ needs.test-node-24.outputs.passed }}"; do
+            [ "$r" = "true" ] && PASS=$((PASS+1))
+          done
+          FAIL=$((3 - PASS))
+
+          case "$PASS" in
+            3)
+              echo "✅ All passed - Node 20, 22, 24 (3/3)"
+              exit 0
+              ;;
+            0)
+              echo "❌ All failed - no Node version passed (0/3 failed/skipped/cancelled)"
+              exit 1
+              ;;
+            *)
+              echo "⚠️ $PASS passed, $FAIL failed/cancelled/skipped"
+              exit 1
+              ;;
+          esac

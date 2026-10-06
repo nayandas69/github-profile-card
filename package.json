@@ -13,9 +13,9 @@
     "url": "https://github.com/nayandas69/github-profile-card.git"
   },
   "type": "module",
-  "packageManager": "pnpm@10.29.2",
+  "packageManager": "pnpm@12.9.1",
   "engines": {
-    "node": ">=20.6.0"
+    "node": ">=24.21.0"
   },
   "scripts": {
     "dev": "tsx watch --env-file=.env src/server.ts",
