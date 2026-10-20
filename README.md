@@ -8,9 +8,9 @@
 
 [![CI](https://github.com/nayandas69/github-profile-card/actions/workflows/ci.yml/badge.svg)](https://github.com/nayandas69/github-profile-card/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
-[![Node.js Version](https://img.shields.io/badge/Node.js-%3E%3D20.6-339933?style=flat-square&logo=node.js)](package.json)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?style=flat-square&logo=typescript)](tsconfig.json)
-[![Hono Framework](https://img.shields.io/badge/Hono-4.7-FF6B35?style=flat-square&logo=fastapi)](package.json)
+[![Node.js Version](https://img.shields.io/badge/Node.js-%3E%3D24.22.0-339933?style=flat-square&logo=node.js)](package.json)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178c6?style=flat-square&logo=typescript)](tsconfig.json)
+[![Hono Framework](https://img.shields.io/badge/Hono-4.13.13-FF6B35?style=flat-square&logo=fastapi)](package.json)
 [![Production Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?style=flat-square&logo=vercel)](https://github-profile-card-blue.vercel.app)
 [![Discord](https://img.shields.io/discord/1435329767149797461?label=Join%20Discord&logo=discord&color=5865F2)](https://discord.gg/u9XfHZN8K9)
 
@@ -724,7 +724,7 @@ Replace `{username}` with any GitHub username and `{theme}` with one of our 56 a
 
 ### Prerequisites
 - **Node.js** version 24.x or contemporary iteration
-- **pnpm** version 10.29.2 or equivalent package manager (npm or yarn acceptable)
+- **pnpm** version 12.14.0 or equivalent package manager (npm or yarn acceptable)
 - **GitHub Personal Access Token** for API authentication
 
 ### Installation Protocol
