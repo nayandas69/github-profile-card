@@ -108,7 +108,7 @@ export function renderProfileViews(count: number | null, theme?: string): string
   const valueWidth = Math.max(94, value.length * 14 + 28);
   const labelWidth = 206;
   const width = labelWidth + valueWidth;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="44" viewBox="0 0 ${width} 44" role="img" aria-label="Profile views: ${value}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${((width * 20) / 44).toFixed(2)}" height="20" viewBox="0 0 ${width} 44" role="img" aria-label="Profile views: ${value}">
   <title>Profile views: ${value}</title>
   <defs><clipPath id="rounded"><rect width="${width}" height="44" rx="6"/></clipPath></defs>
   <g clip-path="url(#rounded)">
