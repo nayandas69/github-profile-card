@@ -62,7 +62,7 @@ export function renderCard(
   const bioLine = bioTruncated ? escapeXml(bioTruncated) : '';
   const pronouns = !compact && user.pronouns ? escapeXml(user.pronouns) : '';
   const avatarSource = user.avatarDataUrl || user.avatarUrl;
-  const avatar = avatarSource?.replace(/&/g, '&amp;') || 'data:image/svg+xml,%3Csvg%3E%3C/svg%3E';
+  const avatar = escapeXml(avatarSource || 'data:image/svg+xml,%3Csvg%3E%3C/svg%3E');
   const twitter = !compact && user.twitter ? escapeXml(user.twitter) : '';
 
   /* --- Layout constants --- */
@@ -129,7 +129,7 @@ export function renderCard(
     ? langs
         .map((lang) => {
           const w = (lang.size / totalSize) * barWidth;
-          const r = `<rect x="${P + offset}" y="${barY}" width="${w}" height="8" fill="${lang.color}"/>`;
+          const r = `<rect x="${P + offset}" y="${barY}" width="${w}" height="8" fill="${escapeXml(lang.color)}"/>`;
           offset += w;
           return r;
         })
@@ -206,7 +206,7 @@ export function renderCard(
 
         const cx = labelX + 5; // Circle center x
         const tx = labelX + DOT_GAP - 5; // Text start x
-        const svg = `<circle cx="${cx}" cy="${labelY}" r="4" fill="${lang.color}"/><text x="${tx}" y="${labelY + 4}" class="lang">${labelText}</text>`;
+        const svg = `<circle cx="${cx}" cy="${labelY}" r="4" fill="${escapeXml(lang.color)}"/><text x="${tx}" y="${labelY + 4}" class="lang">${labelText}</text>`;
         labelX += slotWidth; // Advance cursor for the next label
         return svg;
       })
