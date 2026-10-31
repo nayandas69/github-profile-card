@@ -23,7 +23,7 @@ it('sends atomic scripts through the real Redis SDK without an expiry or retries
   expect(commands).toHaveLength(2);
   expect(commands[0]?.[0]).toBe('eval');
   expect(commands[0]?.slice(2)).toEqual([1, 'profile-views:v1:nayandas69']);
-  expect(commands[1]?.slice(2)).toEqual([1, 'profile-views:v2', 'nayandas69', 100000]);
+  expect(commands[1]?.slice(2)).toEqual([1, 'profile-views:v2', 'nayandas69', 100000, 10, 3600]);
   expect(global.fetch).toHaveBeenCalledTimes(2);
 });
 

@@ -37,7 +37,7 @@ describe('profile view badge', () => {
     expect(evalMock).toHaveBeenCalledWith(
       expect.any(String),
       ['profile-views:v2'],
-      ['nayandas69', 100000]
+      ['nayandas69', 100000, 10, 3600]
     );
     for (const response of responses) {
       expect(response.status).toBe(200);
@@ -84,6 +84,15 @@ describe('profile view badge', () => {
     expect(response.headers.get('cache-control')).toContain('no-store');
   });
 
+  it('returns a non-cacheable 429 badge when new counter admissions are limited', async () => {
+    evalMock.mockResolvedValueOnce(0).mockResolvedValueOnce(-2);
+    const response = await app.request('/profile/new-user?theme=dracula');
+    expect(response.status).toBe(429);
+    expect(response.headers.get('retry-after')).toBe('3600');
+    expect(response.headers.get('cache-control')).toContain('no-store');
+    expect(await response.text()).toContain('unavailable');
+  });
+
   it('returns an unavailable badge when storage fails', async () => {
     evalMock.mockRejectedValueOnce(new Error('sensitive provider details'));
     const response = await app.request('/profile/nayandas69');
@@ -106,7 +115,7 @@ describe('profile view badge', () => {
     expect(evalMock).toHaveBeenCalledWith(
       expect.any(String),
       ['profile-views:v2'],
-      ['example', 100000]
+      ['example', 100000, 10, 3600]
     );
   });
 

@@ -14,13 +14,29 @@ return 0
 
 // A single hash and atomic script keep admission and increment on one Redis shard.
 export const INCREMENT_BOUNDED_VIEW = `
-if redis.call('HEXISTS', KEYS[1], ARGV[1]) == 0 and redis.call('HLEN', KEYS[1]) >= tonumber(ARGV[2]) then
-  return -1
+if redis.call('HEXISTS', KEYS[1], ARGV[1]) == 0 then
+  local size = redis.call('HLEN', KEYS[1])
+    - redis.call('HEXISTS', KEYS[1], ':admission-start')
+    - redis.call('HEXISTS', KEYS[1], ':admission-count')
+  if size >= tonumber(ARGV[2]) then return -1 end
+  local now = tonumber(redis.call('TIME')[1])
+  local start = tonumber(redis.call('HGET', KEYS[1], ':admission-start') or '0')
+  local admitted = tonumber(redis.call('HGET', KEYS[1], ':admission-count') or '0')
+  if now - start >= tonumber(ARGV[4]) then
+    start = now
+    admitted = 0
+  end
+  if admitted >= tonumber(ARGV[3]) then return -2 end
+  redis.call('HSET', KEYS[1], ':admission-start', start, ':admission-count', admitted + 1)
 end
 return redis.call('HINCRBY', KEYS[1], ARGV[1], 1)
 `;
 
 export const MAX_PROFILE_VIEW_COUNTERS = 100_000;
+export const MAX_NEW_PROFILE_COUNTERS_PER_HOUR = 10;
+export const PROFILE_ADMISSION_WINDOW_SECONDS = 3600;
+
+export class ProfileViewAdmissionLimitError extends Error {}
 
 /** Persistent counters are separate from the expiring card cache. */
 export async function incrementProfileViews(username: string): Promise<number> {
@@ -44,9 +60,16 @@ export async function incrementProfileViews(username: string): Promise<number> {
       ? await redis.eval<unknown[], number>(
           INCREMENT_BOUNDED_VIEW,
           ['profile-views:v2'],
-          [login, MAX_PROFILE_VIEW_COUNTERS]
+          [
+            login,
+            MAX_PROFILE_VIEW_COUNTERS,
+            MAX_NEW_PROFILE_COUNTERS_PER_HOUR,
+            PROFILE_ADMISSION_WINDOW_SECONDS,
+          ]
         )
       : existing;
+  if (count === -2)
+    throw new ProfileViewAdmissionLimitError('Profile view admission limit reached');
   if (!Number.isSafeInteger(count) || count < 1) throw new Error('Profile view count unavailable');
   return count;
 }

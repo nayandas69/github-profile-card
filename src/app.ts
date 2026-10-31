@@ -11,7 +11,12 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { getProfileData, renderCard } from './services/index.js';
 import { themes } from './utils/themes.js';
-import { incrementProfileViews, renderProfileViews } from './services/views.js';
+import {
+  incrementProfileViews,
+  ProfileViewAdmissionLimitError,
+  PROFILE_ADMISSION_WINDOW_SECONDS,
+  renderProfileViews,
+} from './services/views.js';
 import { APP_VERSION } from './version.js';
 
 /** Create the Hono app instance */
@@ -78,7 +83,11 @@ app.on(['HEAD', 'GET'], '/profile/:username', async (c) => {
   if (c.req.method === 'HEAD') return c.body(null, 200);
   try {
     return c.body(renderProfileViews(await incrementProfileViews(username), theme));
-  } catch {
+  } catch (error) {
+    if (error instanceof ProfileViewAdmissionLimitError) {
+      c.header('Retry-After', String(PROFILE_ADMISSION_WINDOW_SECONDS));
+      return c.body(renderProfileViews(null, theme), 429);
+    }
     console.error('Profile view storage unavailable');
     c.header('Retry-After', '30');
     return c.body(renderProfileViews(null, theme), 503);

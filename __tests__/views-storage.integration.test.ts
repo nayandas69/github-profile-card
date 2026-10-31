@@ -6,7 +6,11 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import { expect, it } from 'vitest';
-import { incrementProfileViews, MAX_PROFILE_VIEW_COUNTERS } from '../src/services/views.js';
+import {
+  incrementProfileViews,
+  MAX_PROFILE_VIEW_COUNTERS,
+  ProfileViewAdmissionLimitError,
+} from '../src/services/views.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -100,7 +104,26 @@ it('enforces the 100000 counter limit against a stateful Redis server', async ()
     process.env['UPSTASH_REDIS_REST_URL'] = `http://127.0.0.1:${address.port}`;
     process.env['UPSTASH_REDIS_REST_TOKEN'] = 'test-only-token';
 
-    // Leave one slot free and fill the last slot through the production method.
+    // Concurrent admissions share one budget, while admitted counters remain usable.
+    const admissions = await Promise.allSettled(
+      Array.from({ length: 20 }, (_, i) => incrementProfileViews(`candidate${i}`))
+    );
+    expect(admissions.filter((result) => result.status === 'fulfilled')).toHaveLength(10);
+    expect(admissions.filter((result) => result.status === 'rejected')).toHaveLength(10);
+    for (const result of admissions) {
+      if (result.status === 'rejected')
+        expect(result.reason).toBeInstanceOf(ProfileViewAdmissionLimitError);
+    }
+    const admittedIndex = admissions.findIndex((result) => result.status === 'fulfilled');
+    expect(await incrementProfileViews(`candidate${admittedIndex}`)).toBe(2);
+    await expect(incrementProfileViews('blocked')).rejects.toBeInstanceOf(
+      ProfileViewAdmissionLimitError
+    );
+    execFileSync('redis-cli', ['-s', socket, 'HSET', 'profile-views:v2', ':admission-start', '0']);
+    expect(await incrementProfileViews('next-window')).toBe(1);
+
+    // Reset synthetic state, then leave one slot free and fill the last slot.
+    execFileSync('redis-cli', ['-s', socket, 'DEL', 'profile-views:v2']);
     const commands: string[] = [];
     for (let start = 0; start < MAX_PROFILE_VIEW_COUNTERS - 1; start += 1000) {
       const fields: string[] = [];
@@ -118,7 +141,7 @@ it('enforces the 100000 counter limit against a stateful Redis server', async ()
       execFileSync('redis-cli', ['-s', socket, '--raw', 'HLEN', 'profile-views:v2'], {
         encoding: 'utf8',
       }).trim()
-    ).toBe('100000');
+    ).toBe('100002');
 
     await expect(incrementProfileViews('one-too-many')).rejects.toThrow(
       'Profile view count unavailable'
@@ -140,7 +163,7 @@ it('enforces the 100000 counter limit against a stateful Redis server', async ()
       execFileSync('redis-cli', ['-s', socket, '--raw', 'HLEN', 'profile-views:v2'], {
         encoding: 'utf8',
       }).trim()
-    ).toBe('100000');
+    ).toBe('100002');
   } finally {
     if (bridge?.listening) await new Promise<void>((resolve) => bridge!.close(() => resolve()));
     if (redis && redis.exitCode === null && redis.pid) {
