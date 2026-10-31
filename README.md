@@ -908,7 +908,7 @@ Storage failures return an SVG marked `unavailable` with HTTP 503 and no cache; 
 
 **Testing:** `pnpm test` requires `redis-server` and `redis-cli` on the PATH for the isolated counter integration test. The test starts a temporary local Redis instance without persistence or external credentials and stops it afterward.
 
-Vercel rewrites application paths to `api/index.ts`; use the Node 26 LTS runtime in the deployment project. No GitHub token is needed for badges. Existing `/card/:username` requests retain their caching and GitHub data behavior.
+Vercel detects the root-mounted Hono application in `src/app.ts`; use the Node 26 LTS runtime in the deployment project. No GitHub token is needed for badges. Existing `/card/:username` requests retain their caching and GitHub data behavior.
 
 ### Health Status Endpoint: `GET /health`
 
