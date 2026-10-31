@@ -2,3 +2,7 @@ minimumReleaseAge: 0
 
 allowBuilds:
   esbuild: true
+
+# Patched glob parser required by the development tooling.
+overrides:
+  "minimatch@<11.0.1": "11.0.1"

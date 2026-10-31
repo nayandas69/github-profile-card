@@ -56,6 +56,15 @@ describe('renderCard', () => {
     expect(svg).toContain('Test User');
   });
 
+  it('escapes avatar URLs and language colors in SVG attributes', () => {
+    const user = { ...mockUser, avatarUrl: 'https://example.test/image?x=1&y="bad"' };
+    const langs = [{ name: 'Test', size: 1, color: '#fff" onload="alert(1)' }];
+    const svg = renderCard(user, mockStats, langs);
+    expect(svg).toContain('href="https://example.test/image?x=1&amp;y=&quot;bad&quot;"');
+    expect(svg).toContain('fill="#fff&quot; onload=&quot;alert(1)"');
+    expect(svg).not.toContain('" onload="alert(1)"');
+  });
+
   it('includes the username with @ prefix', () => {
     const svg = renderCard(mockUser, mockStats, mockLangs);
     expect(svg).toContain('@testuser');

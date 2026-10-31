@@ -11,6 +11,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { getProfileData, renderCard } from './services/index.js';
 import { themes } from './utils/themes.js';
+import { incrementProfileViews, renderProfileViews } from './services/views.js';
 import { APP_VERSION } from './version.js';
 
 /** Create the Hono app instance */
@@ -53,9 +54,35 @@ app.get('/', (c) => {
     version: APP_VERSION,
     author: 'Nayan Das (https://github.com/nayandas69)',
     usage: 'GET /card/:username',
+    profileViews: 'GET /profile/:username',
     themes: Object.keys(themes),
     repository: 'https://github.com/nayandas69/github-profile-card',
   });
+});
+
+/** Count only GET requests that reach the origin; HEAD probes never mutate storage. */
+app.on(['HEAD', 'GET'], '/profile/:username', async (c) => {
+  c.header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  c.header('CDN-Cache-Control', 'no-store');
+  c.header('Vercel-CDN-Cache-Control', 'no-store');
+  c.header('Pragma', 'no-cache');
+  c.header('Expires', '0');
+  c.header('X-Content-Type-Options', 'nosniff');
+  const username = c.req.param('username');
+  const theme = c.req.query('theme');
+  // GitHub logins cannot start/end with a hyphen or contain consecutive hyphens.
+  if (!/^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i.test(username)) {
+    return c.json({ error: 'Invalid GitHub username.' }, 400);
+  }
+  c.header('Content-Type', 'image/svg+xml; charset=utf-8');
+  if (c.req.method === 'HEAD') return c.body(null, 200);
+  try {
+    return c.body(renderProfileViews(await incrementProfileViews(username), theme));
+  } catch {
+    console.error('Profile view storage unavailable');
+    c.header('Retry-After', '30');
+    return c.body(renderProfileViews(null, theme), 503);
+  }
 });
 
 /**
@@ -175,13 +202,12 @@ app.get('/card/:username', async (c) => {
         return c.json({ error: 'GitHub API error. Please try again later.' }, 503);
       }
 
-      return c.json({ error: message }, 500);
+      console.error('Card generation failed');
+      return c.json({ error: 'An unexpected error occurred' }, 500);
     }
 
-    // Handle non-Error objects
-    const errorMessage =
-      err instanceof Object && 'message' in err ? String(err.message) : String(err);
-    return c.json({ error: errorMessage || 'An unexpected error occurred' }, 500);
+    console.error('Card generation failed');
+    return c.json({ error: 'An unexpected error occurred' }, 500);
   }
 });
 

@@ -1,5 +1,6 @@
 <div align="center">
   <img src="https://github-profile-card-blue.vercel.app/card/nayandas69?theme=tokyonight" alt="GitHub Profile Card Demo">
+  <img src="https://github-profile-card-blue.vercel.app/profile/nayandas69?theme=tokyonight" alt="GitHub Profile Views Demo">
 </div>
 
 ---
@@ -8,9 +9,9 @@
 
 [![CI](https://github.com/nayandas69/github-profile-card/actions/workflows/ci.yml/badge.svg)](https://github.com/nayandas69/github-profile-card/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
-[![Node.js Version](https://img.shields.io/badge/Node.js-%3E%3D24.22.0-339933?style=flat-square&logo=node.js)](package.json)
+[![Node.js Version](https://img.shields.io/badge/Node.js-%3E%3D26.13.0-339933?style=flat-square&logo=node.js)](package.json)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178c6?style=flat-square&logo=typescript)](tsconfig.json)
-[![Hono Framework](https://img.shields.io/badge/Hono-4.13.13-FF6B35?style=flat-square&logo=fastapi)](package.json)
+[![Hono Framework](https://img.shields.io/badge/Hono-4.13.14-FF6B35?style=flat-square&logo=fastapi)](package.json)
 [![Production Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?style=flat-square&logo=vercel)](https://github-profile-card-blue.vercel.app)
 [![Discord](https://img.shields.io/discord/1435329767149797461?label=Join%20Discord&logo=discord&color=5865F2)](https://discord.gg/u9XfHZN8K9)
 
@@ -723,8 +724,12 @@ Replace `{username}` with any GitHub username and `{theme}` with one of our 56 a
 ## Quickstart Guide
 
 ### Prerequisites
-- **Node.js** version 24.x or contemporary iteration
-- **pnpm** version 12.14.0 or equivalent package manager (npm or yarn acceptable)
+
+- **Node.js** 26 LTS, version 26.13.0 (see `.node-version`)
+
+
+- **pnpm** 12.17.0 (pinned in `packageManager`)
+
 - **GitHub Personal Access Token** for API authentication
 
 ### Installation Protocol
@@ -737,7 +742,15 @@ Replace `{username}` with any GitHub username and `{theme}` with one of our 56 a
 
 2. **Dependency Installation**
    ```bash
+   sudo apt-get update
+   sudo apt-get install -y redis-server
    pnpm install
+   pnpm run format:check
+   pnpm run format
+   pnpm typecheck
+   pnpm lint
+   pnpm test
+   pnpm build
    ```
 
 3. **Environment Configuration Initialisation**
@@ -830,7 +843,7 @@ check the `.env.example` file for a detailed template of required environment va
 ```json
 {
   "name": "GitHub Profile Card API",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "author": "Nayan Das (https://github.com/nayandas69)",
   "usage": "GET /card/:username",
   "themes": [
@@ -848,7 +861,7 @@ Returns comprehensive API metadata and accessible thematic variations.
 ```json
 {
   "name": "GitHub Profile Card API",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "themes": ["default", "dark", "radical", ...]
 }
 ```
@@ -872,7 +885,33 @@ Generates a customised SVG profile representation for the designated GitHub user
 
 **Response Specification:** SVG image with appropriate HTTP caching directives
 
+### Profile View Badge: `GET /profile/:username`
+
+Add this to your GitHub profile repository (`username/username`):
+
+```markdown
+![Profile views](https://github-profile-card-blue.vercel.app/profile/nayandas69)
+![Themed profile views](https://github-profile-card-blue.vercel.app/profile/nayandas69?theme=dracula)
+```
+
+Replace `nayandas69` with your GitHub username. The badge includes a GitHub icon and supports all 56 card themes using the `theme` parameter. Omitting the parameter keeps the gray and blue badge; unknown theme names use the card's default theme. Foreground colors adjust when needed for readability. All themes share the same username counter.
+
+Each successful GET reaching this service atomically increments a persistent Redis counter. Usernames are case insensitive; HEAD and OPTIONS requests do not increment it. The endpoint counts image requests, including bots and repeated visits, rather than unique visitors. It does not call GitHub to verify that an account exists.
+
+**GitHub caching:** this endpoint sends browser and CDN `no-store` headers, but GitHub serves README images through its Camo image proxy. A GitHub page refresh does not necessarily request the image from this service. Exact counts of every GitHub profile page refresh cannot be guaranteed by an embedded image.
+
+**Deployment:** configure a complete `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` pair (or `KV_REST_API_URL` and `KV_REST_API_TOKEN`). Redis must support `EVAL`, `EXISTS`, `INCR`, `HEXISTS`, `HLEN`, and `HINCRBY`. Redis is required for badges and remains optional for card caching. New counters are stored without expiration in the `profile-views:v2` hash, limited atomically to 100,000 usernames across application instances. Existing counters can continue to increment when the limit is reached; new usernames receive HTTP 503. This cap bounds new counter storage, but does not prevent request floods or protect provider request quotas; configure appropriate request limits separately. Use persistent storage with no eviction and back up both counter namespaces.
+
+**Upgrading an earlier badge deployment:** existing `profile-views:v1:<lowercase-username>` counters are retained and incremented in place. Stop all instances of the earlier implementation before starting this one: older instances can create v1 keys while new instances create v2 fields, splitting the count. The v2 cap applies to new counters; existing v1 keys are not included in that cap. Do not delete old keys or the v2 hash unless resetting their counts is intended.
+
+Storage failures return an SVG marked `unavailable` with HTTP 503 and no cache; there is no temporary in-memory total. Ambiguous failed writes are not retried automatically. A timeout after Redis committed an increment can still increase the total without a successful image response. Invalid usernames return HTTP 400.
+
+**Testing:** `pnpm test` requires `redis-server` and `redis-cli` on the PATH for the isolated counter integration test. The test starts a temporary local Redis instance without persistence or external credentials and stops it afterward.
+
+Vercel rewrites application paths to `api/index.ts`; use the Node 26 LTS runtime in the deployment project. No GitHub token is needed for badges. Existing `/card/:username` requests retain their caching and GitHub data behavior.
+
 ### Health Status Endpoint: `GET /health`
+
 Elementary server availability verification mechanism.
 
 **Response Payload:**
@@ -929,5 +968,3 @@ For technical assistance, inquiries, or feature recommendations:
 ---
 
 **Developed by Nayan Das**
-
-![Profile](https://komarev.com/ghpvc/?username=nayandas69)

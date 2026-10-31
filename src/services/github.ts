@@ -7,6 +7,7 @@
  */
 
 import type { LanguageStat, ProfileData } from '../types/index.js';
+import { getRedisCredentials } from './redis-credentials.js';
 /**
  * Import getLangColor so the comprehensive language
  * color map in languages.ts is actually used instead of relying solely on
@@ -255,9 +256,7 @@ interface FetchOptions {
 /* ---------- Upstash Redis (optional) ---------- */
 
 // Read Upstash credentials from environment (supports both naming conventions)
-const redisUrl = process.env['UPSTASH_REDIS_REST_URL'] || process.env['KV_REST_API_URL'] || '';
-const redisToken =
-  process.env['UPSTASH_REDIS_REST_TOKEN'] || process.env['KV_REST_API_TOKEN'] || '';
+const redisCredentials = getRedisCredentials();
 
 /** Lazy-loaded Redis singleton (null if credentials are missing) */
 let redisPromise: Promise<import('@upstash/redis').Redis | null> | null = null;
@@ -267,11 +266,11 @@ let redisPromise: Promise<import('@upstash/redis').Redis | null> | null = null;
  * The import is dynamic so the app works fine without Upstash in dev mode.
  */
 async function getRedis(): Promise<import('@upstash/redis').Redis | null> {
-  if (!redisUrl || !redisToken) return null;
+  if (!redisCredentials) return null;
 
   if (!redisPromise) {
     redisPromise = import('@upstash/redis')
-      .then((mod) => new mod.Redis({ url: redisUrl, token: redisToken }))
+      .then((mod) => new mod.Redis(redisCredentials))
       .catch((err) => {
         console.error('Failed to initialize Redis:', err instanceof Error ? err.message : err);
         return null;
